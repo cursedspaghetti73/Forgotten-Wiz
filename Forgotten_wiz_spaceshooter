@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NFT Space Shooter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        background: #000;
+        color: #0f0;
+        font-family: "Courier New", Courier, monospace;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      /* --- UI Section (The Hangar) --- */
+      #ui-container {
+        background: #111;
+        border: 2px solid #0f0;
+        padding: 20px;
+        width: 350px;
+        text-align: center;
+        z-index: 10;
+      }
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        background: #000;
+        border: 1px solid #0f0;
+        color: #0f0;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      button {
+        cursor: pointer;
+        background: #003300;
+        font-weight: bold;
+      }
+      button:hover:not([disabled]) {
+        background: #005500;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        border-color: #555;
+        color: #555;
+      }
+      #asset-preview {
+        max-width: 200px;
+        max-height: 200px;
+        margin: 15px auto;
+        border: 1px solid #333;
+        display: none;
+      }
+      .loading {
+        color: yellow;
+        display: none;
+      }
+
+      /* --- Game Section (The Canvas) --- */
+      #game-container {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        background: radial-gradient(circle at bottom, #001 0%, #000 100%);
+      }
+      #score-display {
+        position: absolute;
+        top: 10px;
+        left: 20px;
+        font-size: 24px;
+        font-weight: bold;
+        pointer-events: none;
+      }
+      #game-over {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 40px;
+        color: red;
+        text-shadow: 0 0 10px red;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@farcade/game-sdk@0.2.1/dist/index.min.js"></script>
+  </head>
+  <body>
+    <div id="ui-container">
+      <h2>ERC-721 HANGAR</h2>
+      <div>
+        <label>Contract Address</label>
+        <input type="text" id="contractAddress" value="0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42" />
+      </div>
+      <div>
+        <label>Token ID</label>
+        <input type="number" id="tokenId" value="1" />
+      </div>
+      <button onclick="summonAsset()">SUMMON ASSET</button>
+      <div id="loading" class="loading">Scanning Blockchain...</div>
+
+      <img id="asset-preview" src="" alt="Asset Preview" />
+
+      <button id="btn-deploy" disabled onclick="startGame()">DEPLOY SHIP</button>
+    </div>
+
+    <div id="game-container">
+      <div id="score-display">SCORE: 0</div>
+      <div id="game-over">GAME OVER<br /><small style="font-size: 20px">Refresh to play again</small></div>
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+      // ==================================================================
+      // PART 1: BLOCKCHAIN ASSET READING (The "Hangar" Logic)
+      // ==================================================================
+      let selectedAssetUrl = null; // Global variable to store the chosen image URL
+
+      const minimalABI = ["function tokenURI(uint256 _tokenId) view returns (string)"];
+
+      async function summonAsset() {
+        const loadingEl = document.getElementById("loading");
+        const previewEl = document.getElementById("asset-preview");
+        const deployBtn = document.getElementById("btn-deploy");
+
+        loadingEl.style.display = "block";
+        previewEl.style.display = "none";
+        deployBtn.disabled = true;
+        selectedAssetUrl = null;
+
+        const address = document.getElementById("contractAddress").value;
+        const id = document.getElementById("tokenId").value;
+
+        try {
+          // 1. Connect and fetch Token URI
+          if (!window.ethereum) throw new Error("MetaMask needed.");
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const contract = new ethers.Contract(address, minimalABI, provider);
+          let tokenUri = await contract.tokenURI(id);
+
+          // 2. Resolve IPFS gateways
+          if (tokenUri.startsWith("ipfs://")) {
+            tokenUri = tokenUri.replace("ipfs://", "https://ipfs.io/ipfs/");
+          }
+
+          // 3. Fetch metadata and find image URL
+          // Note: Using a CORS proxy might be necessary for some collections if fetch fails.
+          const response = await fetch(tokenUri);
+          const metadata = await response.json();
+
+          let imgUrl = metadata.image || metadata.image_url;
+          if (imgUrl.startsWith("ipfs://")) {
+            imgUrl = imgUrl.replace("ipfs://", "https://ipfs.io/ipfs/");
+          }
+
+          // 4. Display preview and enable game deployment
+          previewEl.src = imgUrl;
+          previewEl.style.display = "block";
+          selectedAssetUrl = imgUrl; // SAVE THE URL FOR THE GAME
+          deployBtn.disabled = false;
+        } catch (err) {
+          console.error(err);
+          alert("Failed to load asset. Check console for details. (May be CORS issue or invalid ID)");
+        } finally {
+          loadingEl.style.display = "none";
+        }
+      }
+
+      // ==================================================================
+      // PART 2: SPACESHOOTER GAME ENGINE (Canvas Logic)
+      // ==================================================================
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      let gameRunning = false;
+      let score = 0;
+
+      // Game Constants
+      const PLAYER_SPEED = 5;
+      const BULLET_SPEED = 7;
+      const ENEMY_SPEED = 2;
+      const SPAWN_RATE = 60; // Lower is faster spawns
+
+      let frames = 0;
+      let bullets = [];
+      let enemies = [];
+      let keys = {};
+
+      // The player object placeholder
+      const player = {
+        x: 0,
+        y: 0,
+        width: 50,
+        height: 50,
+        sprite: new Image(),
+      };
+
+      function startGame() {
+        if (!selectedAssetUrl) return;
+
+        // Switch UI views
+        document.getElementById("ui-container").style.display = "none";
+        document.getElementById("game-container").style.display = "block";
+
+        // Setup Canvas dimensions
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Initialize Player Position to bottom center
+        player.x = canvas.width / 2 - player.width / 2;
+        player.y = canvas.height - player.height - 20;
+
+        // Load the selected asset into the player sprite object
+        player.sprite.src = selectedAssetUrl;
+        // Only start the game loop once the image is actually loaded into memory
+        player.sprite.onload = () => {
+          gameRunning = true;
+          gameLoop();
+        };
+
+        setupInputs();
+      }
+
+      function setupInputs() {
+        window.addEventListener("keydown", (e) => {
+          keys[e.key] = true;
+          if (e.key === " ") fireBullet();
+        });
+        window.addEventListener("keyup", (e) => (keys[e.key] = false));
+        window.addEventListener("resize", () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        });
+      }
+
+      function fireBullet() {
+        bullets.push({
+          x: player.x + player.width / 2 - 2.5, // Center bullet
+          y: player.y,
+          width: 5,
+          height: 15,
+          color: "#0f0",
+        });
+      }
+
+      function spawnEnemy() {
+        if (frames % SPAWN_RATE === 0) {
+          // Simple red squares as enemies
+          enemies.push({
+            x: Math.random() * (canvas.width - 30),
+            y: -30,
+            width: 30,
+            height: 30,
+            color: "red",
+          });
+        }
+      }
+
+      function checkCollision(rect1, rect2) {
+        return (
+          rect1.x < rect2.x + rect2.width &&
+          rect1.x + rect1.width > rect2.x &&
+          rect1.y < rect2.y + rect2.height &&
+          rect1.y + rect1.height > rect2.y
+        );
+      }
+
+      function gameOver() {
+        gameRunning = false;
+        document.getElementById("game-over").style.display = "block";
+      }
+
+      // --- CORE GAME LOOP ---
+      function update() {
+        if (!gameRunning) return;
+        frames++;
+
+        // 1. Player Movement based on keys being held down
+        if (keys["ArrowLeft"] && player.x > 0) player.x -= PLAYER_SPEED;
+        if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += PLAYER_SPEED;
+
+        // 2. Update Bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          bullets[i].y -= BULLET_SPEED;
+          // Remove off-screen bullets
+          if (bullets[i].y + bullets[i].height < 0) bullets.splice(i, 1);
+        }
+
+        // 3. Spawn and Update Enemies
+        spawnEnemy();
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          enemies[i].y += ENEMY_SPEED;
+
+          // Check collision with Player (Game Over)
+          if (checkCollision(enemies[i], player)) {
+            gameOver();
+          }
+
+          // Remove off-screen enemies
+          if (enemies[i].y > canvas.height) {
+            enemies.splice(i, 1);
+            continue;
+          }
+
+          // Check collision with Bullets
+          for (let j = bullets.length - 1; j >= 0; j--) {
+            if (bullets[j] && checkCollision(enemies[i], bullets[j])) {
+              bullets.splice(j, 1); // Remove bullet
+              enemies.splice(i, 1); // Remove enemy
+              score += 10;
+              document.getElementById("score-display").innerText = "SCORE: " + score;
+              // Break because this enemy is gone, don't check other bullets against it
+              break;
+            }
+          }
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player Sprite (The NFT)
+        // drawImage(image, x, y, width, height)
+        ctx.drawImage(player.sprite, player.x, player.y, player.width, player.height);
+
+        // Draw Bullets
+        bullets.forEach((b) => {
+          ctx.fillStyle = b.color;
+          ctx.fillRect(b.x, b.y, b.width, b.height);
+        });
+
+        // Draw Enemies
+        enemies.forEach((e) => {
+          ctx.fillStyle = e.color;
+          ctx.fillRect(e.x, e.y, e.width, e.height);
+        });
+      }
+
+      function gameLoop() {
+        update();
+        draw();
+        if (gameRunning) requestAnimationFrame(gameLoop);
+      }
+    </script>
+  </body>
+</html>
