@@ -46,7 +46,7 @@ let gameState = {
     bossActive: false,
     
     // Visuals (for the start screen animation)
-    stars: []
+   rings: [] // *** CAMBIATO: da stars a rings ***
 };
 
 // --- INITIALIZATION ---
@@ -62,18 +62,33 @@ Object.keys(RING_COLORS).forEach(colorName => {
     ringChoicesContainer.appendChild(button);
 });
 
-// 2. Start Screen Animation (Stars)
-function initStars() {
-    for (let i = 0; i < 100; i++) {
-        gameState.stars.push({
+// Funzione helper per ottenere un colore casuale da RING_COLORS
+function getRandomRingColor() {
+    const colors = Object.values(RING_COLORS);
+    const randomIndex = Math.floor(Math.random() * colors.length);
+    return colors[randomIndex];
+}
+
+// 2. Start Screen Animation (Rings)
+function initRings() {
+    // Genera meno anelli (ad esempio 20 anziché 100 stelle)
+    const NUM_RINGS = 20; 
+
+    for (let i = 0; i < NUM_RINGS; i++) {
+        const size = Math.random() * 5 + 8; // Più grandi: raggio tra 8 e 13
+        const speed = Math.random() * 1.5 + 2.5; // Più veloci: velocità tra 2.5 e 4.0
+
+        gameState.rings.push({
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
-            size: Math.random() * 2 + 1
+            size: size,
+            speed: speed, // Velocità random diversa
+            color: getRandomRingColor(), // Colore casuale da RING_COLORS
+            trail: [] // Array per le scie
         });
     }
 }
-initStars();
-
+initRings(); // Chiamata aggiornata
 // --- GAME FUNCTIONS ---
 
 function selectRing(colorName, button) {
@@ -175,21 +190,60 @@ function fireSpecialAttack() {
 
 function drawStartScreen() {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    // Draw slowly falling stars on the start screen canvas
-    ctx.fillStyle = '#000033'; // Blue background
+    // Disegna lo sfondo blu scuro
+    ctx.fillStyle = '#000033'; 
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    ctx.fillStyle = '#fff';
-    gameState.stars.forEach(star => {
-        ctx.fillRect(star.x, star.y, star.size, star.size);
-        // Animate stars (falling slowly from bottom to top)
-        star.y -= 0.1; 
-        if (star.y < 0) {
-            star.y = CANVAS_HEIGHT; // Wrap around
+    // Disegna gli anelli e le scie
+    gameState.rings.forEach(ring => {
+        
+        // 1. Aggiorna la scia
+        const maxTrailLength = 5;
+        // Aggiungi la posizione attuale alla scia
+        ring.trail.push({ x: ring.x, y: ring.y, alpha: 1 }); 
+        // Mantieni solo gli ultimi elementi della scia
+        if (ring.trail.length > maxTrailLength) {
+            ring.trail.shift();
+        }
+        
+        // 2. Disegna la scia (Tail)
+        // La scia ha un aspetto sfumato (alpha)
+        ring.trail.forEach((pos, index) => {
+            const alpha = index / maxTrailLength; // Più invecchia, più sbiadisce
+            const trailSize = ring.size * (1 - alpha); // Rimpicciolire leggermente
+            
+            // Imposta il colore con trasparenza
+            ctx.strokeStyle = ring.color;
+            ctx.globalAlpha = alpha * 0.5; // Scia semitrasparente
+            ctx.lineWidth = 2; // Spessore della scia
+            
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, trailSize / 2, 0, Math.PI * 2);
+            ctx.stroke();
+        });
+        
+        // Ripristina l'opacità globale per l'anello principale
+        ctx.globalAlpha = 1.0; 
+        
+        // 3. Disegna l'anello principale (Ring)
+        ctx.strokeStyle = ring.color;
+        ctx.lineWidth = 3; // Spessore dell'anello
+        
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.size, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 4. Animazione e Wrap Around (dal basso verso l'alto, più veloce)
+        ring.y -= ring.speed; // Usa la velocità random definita in initRings
+        if (ring.y < 0) {
+            ring.y = CANVAS_HEIGHT; // Torna in fondo
+            ring.x = Math.random() * CANVAS_WIDTH; // Posizione X casuale
+            // Pulisci la scia quando si avvolge, per evitare linee lunghe
+            ring.trail = []; 
         }
     });
 
-    // Request the next frame to keep the stars animated
+    // Request the next frame to keep the rings animated
     if (gameState.currentScreen === 'start') {
         requestAnimationFrame(drawStartScreen);
     }
