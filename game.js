@@ -186,7 +186,7 @@ function drawStartScreen() {
     gameState.stars.forEach(ring => {
         // Imposta il colore e lo spessore della linea per l'anello
         ctx.strokeStyle = ring.color; 
-        ctx.lineWidth = 2; 
+        ctx.lineWidth = 6; 
 
         // Disegna l'anello (cerchio vuoto)
         ctx.beginPath();
