@@ -63,7 +63,7 @@ Object.keys(RING_COLORS).forEach(colorName => {
 });
 
 // 2. Start Screen Animation (Stars)
-unction initStars() {
+function initStars() {
     // Meno frequenti: Inizializziamo solo 20 anelli invece di 100 stelle
     for (let i = 0; i < 20; i++) {
         const randomColor = RING_COLORS[Math.floor(Math.random() * RING_COLORS.length)];
