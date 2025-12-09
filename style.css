@@ -8,7 +8,7 @@
     position: relative;
     
     /* NUOVO: Immagine di sfondo animata */
-    background-image: url('background.gif'); /* SOSTITUISCI CON IL NOME DEL TUO FILE */
+    background-image: url('https://github.com/cursedspaghetti73/Forgotten-Wiz/blob/main/EmptySpace.png'); /* SOSTITUISCI CON IL NOME DEL TUO FILE */
     background-size: cover; /* Assicura che copra l'intera area */
     background-repeat: no-repeat;
     /* Puoi aggiungere qui un'animazione CSS se l'immagine è statica */
