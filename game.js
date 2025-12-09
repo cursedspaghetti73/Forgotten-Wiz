@@ -63,12 +63,16 @@ Object.keys(RING_COLORS).forEach(colorName => {
 });
 
 // 2. Start Screen Animation (Stars)
-function initStars() {
-    for (let i = 0; i < 100; i++) {
+unction initStars() {
+    // Meno frequenti: Inizializziamo solo 20 anelli invece di 100 stelle
+    for (let i = 0; i < 20; i++) {
+        const randomColor = RING_COLORS[Math.floor(Math.random() * RING_COLORS.length)];
         gameState.stars.push({
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
-            size: Math.random() * 2 + 1
+            // Più grossi: dimensione dell'anello (raggio) tra 5 e 15
+            radius: Math.random() * 10 + 5,
+            color: randomColor
         });
     }
 }
@@ -174,18 +178,33 @@ function fireSpecialAttack() {
 // --- RENDERING FUNCTIONS (PIXEL ART PLACEHOLDERS) ---
 
 function drawStartScreen() {
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    // Draw slowly falling stars on the start screen canvas
-    ctx.fillStyle = '#000033'; // Blue background
+ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Disegna lo sfondo
+    ctx.fillStyle = '#000033'; // Sfondo blu scuro
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    ctx.fillStyle = '#fff';
-    gameState.stars.forEach(star => {
-        ctx.fillRect(star.x, star.y, star.size, star.size);
-        // Animate stars (falling slowly from bottom to top)
-        star.y -= 0.1; 
-        if (star.y < 0) {
-            star.y = CANVAS_HEIGHT; // Wrap around
+    gameState.stars.forEach(ring => {
+        // Imposta il colore e lo spessore della linea per l'anello
+        ctx.strokeStyle = ring.color; 
+        ctx.lineWidth = 2; // Spessore della linea dell'anello
+
+        // Disegna l'anello (cerchio vuoto)
+        ctx.beginPath();
+        // Disegna un arco che copre 360 gradi (un cerchio completo)
+        ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+        ctx.stroke(); // Disegna la linea dell'anello
+        
+        // Animazione: più veloci (cadono più velocemente)
+        ring.y -= 0.5; // Velocità di caduta aumentata (da 0.1 a 0.5)
+        
+        // Wrap around
+        if (ring.y < 0) {
+            ring.y = CANVAS_HEIGHT; // Riporta l'anello in fondo
+            // Rimuovi la proprietà `size` e `color` e usa `radius` e `color` per l'anello
+            ring.x = Math.random() * CANVAS_WIDTH; // Posizione X casuale
+            ring.radius = Math.random() * 10 + 5; // Nuova dimensione
+            // Nuovo colore casuale quando riappare
+            ring.color = RING_COLORS[Math.floor(Math.random() * RING_COLORS.length)]; 
         }
     });
 
