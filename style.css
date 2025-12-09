@@ -1,0 +1,43 @@
+#game-container {
+    /* Mantiene il bordo e l'ombra */
+    border: 4px solid #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    /* Imposta la dimensione del contenitore */
+    width: 800px;
+    height: 600px;
+    position: relative;
+    
+    /* NUOVO: Immagine di sfondo animata */
+    background-image: url('background.gif'); /* SOSTITUISCI CON IL NOME DEL TUO FILE */
+    background-size: cover; /* Assicura che copra l'intera area */
+    background-repeat: no-repeat;
+    /* Puoi aggiungere qui un'animazione CSS se l'immagine è statica */
+}
+
+#startScreen {
+    /* L'opacità dello sfondo viene rimossa per vedere l'immagine del contenitore */
+    position: absolute;
+    width: 100%; /* Copre il contenitore */
+    height: 100%; /* Copre il contenitore */
+    background-color: rgba(0, 0, 0, 0.4); /* Rendi lo sfondo semi-trasparente */
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 24px;
+    padding: 20px;
+    box-sizing: border-box;
+    border: none; /* Rimuovi il bordo duplicato */
+    z-index: 10; /* Assicurati che sia sopra la tela */
+}
+
+/* Assicurati che la tela sia visibile ma non abbia lo sfondo predefinito */
+#gameCanvas {
+    background-color: transparent; /* Rimuovi lo sfondo scuro predefinito */
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
