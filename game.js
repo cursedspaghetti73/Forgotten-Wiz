@@ -83,8 +83,9 @@ function initStars() {
             color: randomColor // Questo ora sarà un valore HEX valido (es. '#fff')
             // 🆕 NUOVA PROPRIETÀ: Velocità casuale tra 1.0 e 2.0
             speed: Math.random() * 1 + 1
-        });
+           });
     }
+}
 initStars();
 
 // --- GAME FUNCTIONS ---
