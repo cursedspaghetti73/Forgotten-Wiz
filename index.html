@@ -5,113 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watcher's Ring Ascension</title>
     <style>
-    /* 1. Definizione dell'animazione Keyframes per lo scrolling */
-    @keyframes background-scroll {
-        from {
-            background-position: 0 0;
+        /* Basic styling for the pixel art feel and centering */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #000;
+            font-family: 'Courier New', monospace; /* A classic pixel-style font */
         }
-        to {
-            /* Sposta l'immagine verso il basso di 600px (altezza del contenitore) */
-            background-position: 0 600px; 
+        
+        #game-container {
+            border: 4px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
         }
-    }
 
-    /* Basic styling for the pixel art feel and centering */
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #000;
-        font-family: 'Courier New', monospace;
-    }
-    
-    #game-container {
-        border: 4px solid #fff;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        width: 800px;
-        height: 600px;
-        position: relative; /* Necessario per posizionare le schermate */
+        /* The main game area */
+        #gameCanvas {
+            background-color: #000033; /* Dark blue background */
+            display: block;
+            cursor: pointer;
+        }
 
-        /* 2. APPLICAZIONE DELLO SFONDO ANIMATO */
-        /* Assicurati che 'background.png' sia un'immagine stellare piastrellabile (tileable) */
-        background-image: url('https://github.com/cursedspaghetti73/Forgotten-Wiz/blob/main/EmptySpace.png'); 
-        background-repeat: repeat-y; 
-        /* 30s = velocità, linear = movimento costante, infinite = loop continuo */
-        animation: background-scroll 30s linear infinite; 
-    }
+        /* Styling for the animated start screen and menus */
+        #startScreen, #powerUpScreen {
+            position: absolute;
+            width: 800px; /* Should match the canvas width */
+            height: 600px; /* Should match the canvas height */
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 24px;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 4px solid #fff;
+        }
 
-    /* Il main game area */
-    #gameCanvas {
-        /* Rendi la tela trasparente per vedere lo sfondo animato SOTTO */
-        background-color: transparent; 
-        display: block;
-        cursor: pointer;
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
+        .ring-choice {
+            padding: 10px 20px;
+            margin: 5px;
+            border: 2px solid #fff;
+            background-color: #333;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+        
+        .ring-choice:hover {
+            background-color: #555;
+        }
 
-    /* Styling for the animated start screen and menus */
-    #startScreen, #powerUpScreen {
-        position: absolute;
-        width: 100%; /* Copre il contenitore */
-        height: 100%; /* Copre il contenitore */
-        /* Rendi lo sfondo semi-trasparente per vedere l'animazione */
-        background-color: rgba(0, 0, 0, 0.7); 
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        font-size: 24px;
-        padding: 20px;
-        box-sizing: border-box;
-        border: none; /* Rimuovi il bordo duplicato */
-        z-index: 10; /* Assicura che sia sopra il canvas */
-    }
+        #startButton {
+            padding: 15px 30px;
+            margin-top: 20px;
+            background-color: #00aa00;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 28px;
+            border: 4px solid #fff;
+        }
 
-    .ring-choice {
-        padding: 10px 20px;
-        margin: 5px;
-        border: 2px solid #fff;
-        background-color: #333;
-        cursor: pointer;
-        transition: background-color 0.1s;
-    }
-    
-    .ring-choice:hover {
-        background-color: #555;
-    }
-
-    #startButton {
-        padding: 15px 30px;
-        margin-top: 20px;
-        background-color: #00aa00;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        font-size: 28px;
-        border: 4px solid #fff;
-    }
-
-    #startButton:hover {
-        background-color: #00cc00;
-    }
-    
-    /* Stile per i pulsanti Power-Up */
-    .power-up-btn {
-        padding: 10px 20px;
-        margin: 10px;
-        background-color: #0066cc;
-        color: #fff;
-        border: 2px solid #fff;
-        cursor: pointer;
-        font-size: 20px;
-    }
-</style>
+        #startButton:hover {
+            background-color: #00cc00;
+        }
+    </style>
 </head>
 <body>
 
