@@ -64,15 +64,25 @@ Object.keys(RING_COLORS).forEach(colorName => {
 
 // 2. Start Screen Animation (Stars)
 function initStars() {
+    // 1. Ottieni un array delle chiavi (es. ['WHITE', 'BROWN', ...])
+    const ringColorKeys = Object.keys(RING_COLORS);
+    
     // Meno frequenti: Inizializziamo solo 20 anelli invece di 100 stelle
-    for (let i = 0; i < 20; i++) {
-        const randomColor = RING_COLORS[Math.floor(Math.random() * RING_COLORS.length)];
+    for (let i = 0; i < 10; i++) {
+        // 2. Scegli una chiave (nome del colore) casuale
+        const randomKey = ringColorKeys[Math.floor(Math.random() * ringColorKeys.length)];
+        
+        // 3. Usa la chiave per ottenere il valore HEX effettivo
+        const randomColor = RING_COLORS[randomKey]; 
+        
         gameState.stars.push({
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
             // Più grossi: dimensione dell'anello (raggio) tra 5 e 15
-            radius: Math.random() * 10 + 5,
-            color: randomColor
+            radius: Math.random() * 10 + 15,
+            color: randomColor // Questo ora sarà un valore HEX valido (es. '#fff')
+            // 🆕 NUOVA PROPRIETÀ: Velocità casuale tra 1.0 e 2.0
+            speed: Math.random() * 1 + 1
         });
     }
 }
@@ -183,26 +193,33 @@ function drawStartScreen() {
     ctx.fillStyle = '#000033'; // Sfondo blu scuro
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+    const ringColorKeys = Object.keys(RING_COLORS);
+
     gameState.stars.forEach(ring => {
         // Imposta il colore e lo spessore della linea per l'anello
-        ctx.strokeStyle = ring.color; 
-        ctx.lineWidth = 6; 
+        ctx.strokeStyle = ring.color;
+        ctx.lineWidth = 6;
 
         // Disegna l'anello (cerchio vuoto)
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-        ctx.stroke(); 
-        
-        // Animazione: più veloci (cadono più velocemente)
-        ring.y -= 0.5; // Velocità di caduta aumentata
+        ctx.stroke();
+
+        // 🔄 AGGIORNAMENTO: Usa la proprietà speed (tra 1 e 2)
+        ring.y -= ring.speed; 
         
         // Wrap around
         if (ring.y < 0) {
             ring.y = CANVAS_HEIGHT; // Riporta l'anello in fondo
             ring.x = Math.random() * CANVAS_WIDTH; // Nuova posizione X casuale
             ring.radius = Math.random() * 10 + 5; // Nuova dimensione
+            
             // Nuovo colore casuale quando riappare
-            ring.color = RING_COLORS[Math.floor(Math.random() * RING_COLORS.length)]; 
+            const randomKey = ringColorKeys[Math.floor(Math.random() * ringColorKeys.length)];
+            ring.color = RING_COLORS[randomKey]; 
+            
+            // 🔄 AGGIORNAMENTO: Rigenera la velocità casuale (tra 1.0 e 2.0)
+            ring.speed = Math.random() * 1 + 1; 
         }
     });
 
@@ -211,7 +228,6 @@ function drawStartScreen() {
         requestAnimationFrame(drawStartScreen);
     }
 }
-
 function drawPlayer() {
     // Draw the player (Ring) as a simple colored square/circle placeholder
     ctx.fillStyle = gameState.selectedRingColor || '#fff';
