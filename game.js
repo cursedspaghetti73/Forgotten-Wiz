@@ -178,7 +178,7 @@ function fireSpecialAttack() {
 // --- RENDERING FUNCTIONS (PIXEL ART PLACEHOLDERS) ---
 
 function drawStartScreen() {
-ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     // Disegna lo sfondo
     ctx.fillStyle = '#000033'; // Sfondo blu scuro
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -186,22 +186,20 @@ ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     gameState.stars.forEach(ring => {
         // Imposta il colore e lo spessore della linea per l'anello
         ctx.strokeStyle = ring.color; 
-        ctx.lineWidth = 2; // Spessore della linea dell'anello
+        ctx.lineWidth = 2; 
 
         // Disegna l'anello (cerchio vuoto)
         ctx.beginPath();
-        // Disegna un arco che copre 360 gradi (un cerchio completo)
         ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-        ctx.stroke(); // Disegna la linea dell'anello
+        ctx.stroke(); 
         
         // Animazione: più veloci (cadono più velocemente)
-        ring.y -= 0.5; // Velocità di caduta aumentata (da 0.1 a 0.5)
+        ring.y -= 0.5; // Velocità di caduta aumentata
         
         // Wrap around
         if (ring.y < 0) {
             ring.y = CANVAS_HEIGHT; // Riporta l'anello in fondo
-            // Rimuovi la proprietà `size` e `color` e usa `radius` e `color` per l'anello
-            ring.x = Math.random() * CANVAS_WIDTH; // Posizione X casuale
+            ring.x = Math.random() * CANVAS_WIDTH; // Nuova posizione X casuale
             ring.radius = Math.random() * 10 + 5; // Nuova dimensione
             // Nuovo colore casuale quando riappare
             ring.color = RING_COLORS[Math.floor(Math.random() * RING_COLORS.length)]; 
