@@ -68,7 +68,7 @@ function initStars() {
         gameState.stars.push({
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
-            size: Math.random() * 3 + 5
+            size: Math.random() * 2 + 1
         });
     }
 }
