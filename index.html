@@ -1,79 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watcher's Ring Ascension</title>
-    <style>
-        /* Basic styling for the pixel art feel and centering */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #000;
-            font-family: 'Courier New', monospace; /* A classic pixel-style font */
-        }
-        
-        #game-container {
-            border: 4px solid #fff;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        /* The main game area */
-        #gameCanvas {
-            background-color: #000033; /* Dark blue background */
-            display: block;
-            cursor: pointer;
-        }
-
-        /* Styling for the animated start screen and menus */
-        #startScreen, #powerUpScreen {
-            position: absolute;
-            width: 800px; /* Should match the canvas width */
-            height: 600px; /* Should match the canvas height */
-            background-color: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 24px;
-            padding: 20px;
-            box-sizing: border-box;
-            border: 4px solid #fff;
-        }
-
-        .ring-choice {
-            padding: 10px 20px;
-            margin: 5px;
-            border: 2px solid #fff;
-            background-color: #333;
-            cursor: pointer;
-            transition: background-color 0.1s;
-        }
-        
-        .ring-choice:hover {
-            background-color: #555;
-        }
-
-        #startButton {
-            padding: 15px 30px;
-            margin-top: 20px;
-            background-color: #00aa00;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: 28px;
-            border: 4px solid #fff;
-        }
-
-        #startButton:hover {
-            background-color: #00cc00;
-        }
-    </style>
+    
 </head>
 <body>
 
