@@ -1,11 +1,26 @@
+/*
+ * MODIFICHE PER LO STILE PIXEL ART
+ * 1. image-rendering: pixelated; per mantenere i pixel.
+ * 2. box-shadow rimosso o modificato per un aspetto più 'a blocchi'.
+ * 3. Aggiunta una font pixel art (se disponibile e caricata).
+ * 4. Bordi semplici e netti.
+ */
+
+/* Applica image-rendering a tutto ciò che potrebbe scalare, inclusi i contenitori */
 #game-container {
-    /* Mantiene il bordo e l'ombra */
+    /* Mantiene il bordo, ma lo rende più 'a blocchi' */
     border: 4px solid #fff;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    /* Rimuovi box-shadow sfocato o usa un box-shadow 'a blocchi' se vuoi l'effetto */
+    /* box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); <- RIMOSSO o MODIFICATO */
+    box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.8); /* Esempio di ombra 'a blocchi' */
+    
     /* Imposta la dimensione del contenitore */
     width: 800px;
     height: 600px;
     position: relative;
+    
+    /* NUOVO ESSENZIALE PER PIXEL ART: mantiene i pixel nitidi durante lo scaling */
+    image-rendering: pixelated;
     
     /* NUOVO: Immagine di sfondo animata */
     background-image: url('https://github.com/cursedspaghetti73/Forgotten-Wiz/blob/main/EmptySpace.png'); /* SOSTITUISCI CON IL NOME DEL TUO FILE */
@@ -15,22 +30,33 @@
 }
 
 #startScreen {
+    /* Applica una font pixel art, se ne hai una caricata nel CSS globale */
+    /* Esempio: font-family: 'Pixel Art Font', monospace; */
+    
     /* L'opacità dello sfondo viene rimossa per vedere l'immagine del contenitore */
     position: absolute;
     width: 100%; /* Copre il contenitore */
     height: 100%; /* Copre il contenitore */
-    background-color: rgba(0, 0, 0, 0.4); /* Rendi lo sfondo semi-trasparente */
+    /* Lo sfondo semi-trasparente va bene, ma rimuovi l'anti-aliasing */
+    background-color: rgba(0, 0, 0, 0.6); /* Lievemente più opaco per leggibilità */
+    
     color: #fff;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    font-size: 24px;
+    
+    /* Riduci la dimensione del font per un look più 'a blocchi' */
+    font-size: 20px; 
+    
     padding: 20px;
     box-sizing: border-box;
-    border: none; /* Rimuovi il bordo duplicato */
-    z-index: 10; /* Assicurati che sia sopra la tela */
+    border: none;
+    z-index: 10;
+    
+    /* L'aggiunta di text-shadow 'a blocchi' può migliorare l'effetto */
+    text-shadow: 2px 2px 0px #000;
 }
 
 /* Assicurati che la tela sia visibile ma non abbia lo sfondo predefinito */
@@ -40,4 +66,7 @@
     position: absolute;
     top: 0;
     left: 0;
+    
+    /* IMPORTANTE: Applicalo anche alla canvas/tela */
+    image-rendering: pixelated;
 }
