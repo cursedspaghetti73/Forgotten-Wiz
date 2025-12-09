@@ -85,7 +85,6 @@ function initStars() {
             speed: Math.random() * 1 + 1
         });
     }
-}
 initStars();
 
 // --- GAME FUNCTIONS ---
