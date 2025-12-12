@@ -58,27 +58,40 @@ Object.keys(RING_COLORS).forEach(colorName => {
     button.textContent = colorName;
     button.style.color = RING_COLORS[colorName]; // Use the color for text/style
     button.dataset.color = RING_COLORS[colorName];
+    button.style.border = '4px solid transparent'
+
     button.onclick = () => selectRing(colorName, button);
     ringChoicesContainer.appendChild(button);
 });
 
-// Funzione helper per ottenere un colore casuale da RING_COLORS
-function getRandomRingColor() {
-    const colors = Object.values(RING_COLORS);
-    const randomIndex = Math.floor(Math.random() * colors.length);
-    return colors[randomIndex];
+function selectRing(colorName, button) {
+    // Visually highlight the selected ring
+    document.querySelectorAll('.ring-choice').forEach(btn => {
+    btn.style.border = '4px solid transparent';
+    });
+
+
+    button.style.border = '4px solid ' + button.dataset.color;
+    gameState.selectedRingColor = button.dataset.color;
+
+
+    startButton.disabled = false;
 }
+
+
+
+
 
 // 2. Start Screen Animation (Rings)
 function initRings() {
     // Genera meno anelli (ad esempio 20 anziché 100 stelle)
-    const NUM_RINGS = 10; 
+    const NUM_RINGS = 14; 
 
     for (let i = 0; i < NUM_RINGS; i++) {
         const size = Math.random() * 25 + 8; // Più grandi: raggio tra 8 e 13
         const speed = Math.random() * 1.5 + 2.5; // Più veloci: velocità tra 2.5 e 4.0
         const colors = Object.values(RING_COLORS);
-        const randomIndex = Math.floor(Math.random() * colors.length);
+        const randomIndex = Math.floor(Math.random() * (7));
         gameState.rings.push({
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
@@ -115,9 +128,9 @@ function drawStartScreen() {
             const alpha = index / maxTrailLength; // Più invecchia, più sbiadisce
             const trailSize = ring.size * (1 + alpha); // Rimpicciolire leggermente
             const colors = Object.values(RING_COLORS);
-            const randomIndex = Math.floor(Math.random() * colors.length);
+            const randomIndex = Math.floor(Math.random() * (7));
             // Imposta il colore con trasparenza
-            ctx.strokeStyle = ring.color;
+            ctx.strokeStyle = colors[randomIndex];
             ctx.globalAlpha = alpha * 0.5; // Scia semitrasparente
             ctx.lineWidth = 2; // Spessore della scia
             
@@ -183,16 +196,7 @@ function drawStartScreen() {
 
 // --- GAME FUNCTIONS ---
 
-function selectRing(colorName, button) {
-    // Visually highlight the selected ring
-    document.querySelectorAll('.ring-choice').forEach(btn => {
-        btn.style.border = '2px solid #fff';
-    });
-    button.style.border = '4px solid ' + button.dataset.color;
-    
-    gameState.selectedRingColor = button.dataset.color;
-    startButton.disabled = false;
-}
+
 
 function startGame() {
     if (!gameState.selectedRingColor) return;
