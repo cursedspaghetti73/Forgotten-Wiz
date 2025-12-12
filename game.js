@@ -20,6 +20,13 @@ const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 const ringChoicesContainer = document.getElementById('ringChoices');
 
+const FIRE_RATE_LEVELS = {
+    1: 200, // Base: 200 ms
+    2: 120, // Livello 2: Più veloce
+    3: 70   // Livello 3: Molto veloce
+};
+
+
 let gameState = {
     // 'start', 'playing', 'powerup', 'boss'
     currentScreen: 'start',
@@ -30,7 +37,9 @@ let gameState = {
     keys: {}, // Holds pressed keys
 
     // Firing
-    fireRate: 200, // ms between regular shots
+    fireRateLevel: 1, // Nuovo: Livello 1 a 3 (Velocità di sparo)
+    bulletLevel: 1,   // Nuovo: Livello 1 a 3 (Numero di missili: 1, 3, o 5)
+    fireRate: 200,    // Base rate (inizializzato, ma userà FIRE_RATE_LEVELS)
     lastShotTime: 0,
     bullets: [],
 
@@ -77,10 +86,6 @@ function selectRing(colorName, button) {
 
     startButton.disabled = false;
 }
-
-
-
-
 
 // 2. Start Screen Animation (Rings)
 function initRings() {
@@ -153,16 +158,36 @@ function spawnEnemies(count) {
 function autoFire() {
     if (gameState.currentScreen === 'playing') {
         const now = Date.now();
-        // Check if enough time has passed since the last shot (for automatic firing)
-        if (now - gameState.lastShotTime >= gameState.fireRate) {
-            // Add a regular bullet (simple placeholder: small, fast)
-            gameState.bullets.push({
-                x: gameState.playerX,
-                y: gameState.playerY - 20,
-                speed: 10,
-                size: 5,
-                isSpecial: false
-            });
+        
+        // Determina il fire rate attuale in base al livello
+        const currentFireRate = FIRE_RATE_LEVELS[gameState.fireRateLevel] || FIRE_RATE_LEVELS[1];
+
+
+        // Check se è passato abbastanza tempo dall'ultimo sparo
+        if (now - gameState.lastShotTime >= currentFireRate) {
+            
+            // --- Logica per i missili multipli ---
+            const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
+            const spacing = 15; // Spaziatura orizzontale tra i missili
+            
+            // Offset centrale per distribuire i missili attorno al centro
+            const totalWidth = (missileCount - 1) * spacing;
+            let startX = gameState.playerX - (totalWidth / 2);
+
+            for (let i = 0; i < missileCount; i++) {
+                const missileX = startX + i * spacing;
+
+                // Aggiungi un missile (ora un missile a forma di ellisse)
+                gameState.bullets.push({
+                    x: missileX,
+                    y: gameState.playerY - 20,
+                    speed: 10,
+                    size: 12, // Dimensione base
+                    color: gameState.selectedRingColor, // Colore del giocatore
+                    isSpecial: false
+                });
+            }
+
             gameState.lastShotTime = now;
         }
     }
@@ -279,14 +304,69 @@ function drawStartScreen() {
     }
 }
 function drawPlayer() {
-    // Draw the player (Ring) as a simple colored square/circle placeholder
-    ctx.fillStyle = gameState.selectedRingColor || '#fff';
-    // Simple pixel art player: 20x20 square
-    ctx.fillRect(gameState.playerX - 10, gameState.playerY - 10, 20, 20);
+    const playerSize = 12; // Raggio dell'anello del giocatore
+    const maxTrailLength = 15; // Lunghezza della scia per il giocatore
+    const ringColor = gameState.selectedRingColor || '#fff';
 
-    // Draw a small central pixel for detail
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(gameState.playerX - 2, gameState.playerY - 2, 4, 4);
+    // *** 1. AGGIORNA E MANTIENI LA SCIA (TRAIL) ***
+    
+    // Assicurati che il giocatore abbia un array 'trail' (lo aggiungiamo se manca)
+    if (!gameState.playerTrail) {
+        gameState.playerTrail = [];
+    }
+
+    // Aggiungi la posizione attuale alla scia
+    gameState.playerTrail.push({ x: gameState.playerX, y: gameState.playerY, alpha: 1 });
+    
+    // Mantieni solo gli ultimi elementi della scia
+    if (gameState.playerTrail.length > maxTrailLength) {
+        gameState.playerTrail.shift();
+    }
+
+    // *** 2. DISEGNA LA SCIA (TAIL) ***
+    gameState.playerTrail.forEach((pos, index) => {
+        const alpha = index / maxTrailLength; // Sbiadisce man mano che si allontana
+        const trailSize = playerSize * (1 + alpha * 0.5); // Leggermente più grande verso la testa
+        
+        ctx.strokeStyle = ringColor;
+        ctx.globalAlpha = alpha * 0.7; // Scia più visibile
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, trailSize, 0, Math.PI * 2); // Disegna la scia leggermente sotto il centro del player
+        ctx.stroke();
+    });
+
+    // Ripristina l'opacità globale per l'anello principale
+    ctx.globalAlpha = 1.0;
+
+    // *** 3. EFFETTO BAGLIORE (GLOW) ***
+    // Imposta il bagliore per l'anello del giocatore
+    ctx.shadowColor = ringColor;
+    ctx.shadowBlur = 15; // Intensità del bagliore
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // *** 4. DISEGNA L'ANELLO PRINCIPALE ***
+    
+    // Disegna l'anello con il suo colore originale (il "riempimento")
+    ctx.strokeStyle = ringColor;
+    ctx.lineWidth = 1; // Spessore dell'anello
+
+    ctx.beginPath();
+    ctx.arc(gameState.playerX, gameState.playerY, playerSize, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Ripristina gli effetti di ombra/bagliore
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+
+    // *** 5. BORDO ESTERNO NERO (per visibilità) ***
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(gameState.playerX, gameState.playerY, playerSize + 8, 0, Math.PI * 2);
+    ctx.stroke();
 }
 
 function drawEnemies() {
@@ -303,13 +383,31 @@ function drawEnemies() {
 
 function drawBullets() {
     gameState.bullets.forEach(bullet => {
-        ctx.fillStyle = bullet.isSpecial ? '#ffd700' : '#fff'; // Gold for special
+        // Usa il colore del missile se è definito (dal giocatore/autoFire)
+        ctx.fillStyle = bullet.isSpecial ? '#ffd700' : (bullet.color || '#fff'); 
 
-        // Simple pixel art for bullets
+        ctx.beginPath();
         if (bullet.isSpecial) {
+            // Special bullet (quadrato o rettangolo)
             ctx.fillRect(bullet.x - bullet.size / 2, bullet.y - bullet.size / 2, bullet.size, bullet.size);
         } else {
-            ctx.fillRect(bullet.x - bullet.size / 2, bullet.y - bullet.size / 2, bullet.size, bullet.size * 2);
+            // Missile Normale: Ellisse schiacciata
+            const missileWidth = bullet.size; // 8
+            const missileHeight = bullet.size * 3; // 16 (forma allungata)
+
+            // Usa 'ellipse' per una forma più fluida rispetto a un percorso manuale
+            // L'origine (x, y) è il centro dell'ellisse.
+            ctx.ellipse(
+                bullet.x, // Centro X
+                bullet.y + missileHeight / 4, // Spostato leggermente in basso per far sembrare che la punta sia 'bullet.y'
+                missileWidth / 2, // Raggio X
+                missileHeight / 1.7, // Raggio Y
+                0, // Rotazione
+                0, // Angolo di inizio
+                Math.PI * 2 // Angolo di fine
+            );
+            ctx.fill();
+
         }
     });
 }
