@@ -1,14 +1,14 @@
-// --- CONFIGURATION ---
+// Write JavaScript here// --- CONFIGURATION ---
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const GAME_TIME = 60; // seconds until boss
 const RING_COLORS = {
     'WHITE': '#fff', 
-    'BROWN': '#a0522d', 
+    'BROWN': '#5d4037', // Marrone scuro
     'RED': '#ff0000', 
     'BLUE': '#0000ff', 
-    'GREEN': '#00ff00', 
-    'YELLOW': '#ffff00', 
+    'GREEN': '#388e3c', // Verde meno brillante
+    'YELLOW': '#ffeb3b', // Giallo meno intenso (es. 'Yellow' 400/500)
     'PURPLE': '#800080'
 };
 
@@ -72,23 +72,115 @@ function getRandomRingColor() {
 // 2. Start Screen Animation (Rings)
 function initRings() {
     // Genera meno anelli (ad esempio 20 anziché 100 stelle)
-    const NUM_RINGS = 20; 
+    const NUM_RINGS = 10; 
 
     for (let i = 0; i < NUM_RINGS; i++) {
-        const size = Math.random() * 5 + 8; // Più grandi: raggio tra 8 e 13
+        const size = Math.random() * 25 + 8; // Più grandi: raggio tra 8 e 13
         const speed = Math.random() * 1.5 + 2.5; // Più veloci: velocità tra 2.5 e 4.0
-
+        const colors = Object.values(RING_COLORS);
+        const randomIndex = Math.floor(Math.random() * colors.length);
         gameState.rings.push({
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
             size: size,
             speed: speed, // Velocità random diversa
-            color: getRandomRingColor(), // Colore casuale da RING_COLORS
+            color: colors[randomIndex], // Colore casuale da RING_COLORS
             trail: [] // Array per le scie
         });
     }
 }
 initRings(); // Chiamata aggiornata
+
+function drawStartScreen() {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Disegna lo sfondo blu scuro
+    ctx.fillStyle = '#000033'; 
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Disegna gli anelli e le scie
+    gameState.rings.forEach(ring => {
+        
+        // 1. Aggiorna la scia
+        const maxTrailLength = 25;
+        // Aggiungi la posizione attuale alla scia
+        ring.trail.push({ x: ring.x, y: ring.y, alpha: 1 }); 
+        // Mantieni solo gli ultimi elementi della scia
+        if (ring.trail.length > maxTrailLength) {
+            ring.trail.shift();
+        }
+        
+        // 2. Disegna la scia (Tail)
+        // La scia ha un aspetto sfumato (alpha)
+        ring.trail.forEach((pos, index) => {
+            const alpha = index / maxTrailLength; // Più invecchia, più sbiadisce
+            const trailSize = ring.size * (1 + alpha); // Rimpicciolire leggermente
+            const colors = Object.values(RING_COLORS);
+            const randomIndex = Math.floor(Math.random() * colors.length);
+            // Imposta il colore con trasparenza
+            ctx.strokeStyle = ring.color;
+            ctx.globalAlpha = alpha * 0.5; // Scia semitrasparente
+            ctx.lineWidth = 2; // Spessore della scia
+            
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, trailSize / 2, 0, Math.PI * 2);
+            ctx.stroke();
+        });
+        
+        // Ripristina l'opacità globale per l'anello principale
+        ctx.globalAlpha = 1.0; 
+        
+        // =================================================================
+        // 🌟 EFFETTO BAGLIORE (GLOW) 🌟
+        // 1. Imposta l'effetto Bagliore
+        ctx.shadowColor = colors[randomIndex]; 
+        ctx.shadowBlur = 20; // Intensità del bagliore
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // 2. Disegna l'anello con il suo colore originale (il "riempimento")
+        ctx.strokeStyle = colors[randomIndex];
+        ctx.lineWidth = 8; // Spessore dell'anello/riempimento
+
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.size, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 3. Ripristina gli effetti di ombra/bagliore
+        // IMPORTANTE: Azzerare gli shadow prima di disegnare il bordo o altro.
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0; 
+        // =================================================================
+        
+        // 4. Disegna il bordo esterno nero
+        // Imposta il colore a nero
+        ctx.strokeStyle = 'black'; 
+        // Scegli uno spessore per il bordo (ad esempio 2 pixel)
+        ctx.lineWidth = 1; 
+
+        // Disegna l'arco di nuovo, ma con il nuovo stile (disegnando così il bordo)
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.size+4, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 5. Animazione e Wrap Around (dal basso verso l'alto, più veloce)
+        ring.y -= ring.speed; // Usa la velocità random definita in initRings
+        if (ring.y < 0) {
+            ring.y = CANVAS_HEIGHT; // Torna in fondo
+            ring.x = Math.random() * CANVAS_WIDTH; // Posizione X casuale
+            // Pulisci la scia quando si avvolge, per evitare linee lunghe
+            ring.trail = []; 
+        }
+    });
+
+    // Request the next frame to keep the rings animated
+    if (gameState.currentScreen === 'start') {
+        requestAnimationFrame(drawStartScreen);
+    }
+}
+
+
+
+
 // --- GAME FUNCTIONS ---
 
 function selectRing(colorName, button) {
@@ -198,7 +290,7 @@ function drawStartScreen() {
     gameState.rings.forEach(ring => {
         
         // 1. Aggiorna la scia
-        const maxTrailLength = 5;
+        const maxTrailLength = 25;
         // Aggiungi la posizione attuale alla scia
         ring.trail.push({ x: ring.x, y: ring.y, alpha: 1 }); 
         // Mantieni solo gli ultimi elementi della scia
@@ -210,8 +302,9 @@ function drawStartScreen() {
         // La scia ha un aspetto sfumato (alpha)
         ring.trail.forEach((pos, index) => {
             const alpha = index / maxTrailLength; // Più invecchia, più sbiadisce
-            const trailSize = ring.size * (1 - alpha); // Rimpicciolire leggermente
-            
+            const trailSize = ring.size * (1 + alpha); // Rimpicciolire leggermente
+            const colors = Object.values(RING_COLORS);
+            const randomIndex = Math.floor(Math.random() * colors.length);
             // Imposta il colore con trasparenza
             ctx.strokeStyle = ring.color;
             ctx.globalAlpha = alpha * 0.5; // Scia semitrasparente
@@ -225,15 +318,40 @@ function drawStartScreen() {
         // Ripristina l'opacità globale per l'anello principale
         ctx.globalAlpha = 1.0; 
         
-        // 3. Disegna l'anello principale (Ring)
-        ctx.strokeStyle = ring.color;
-        ctx.lineWidth = 3; // Spessore dell'anello
+        // =================================================================
+        // 🌟 EFFETTO BAGLIORE (GLOW) 🌟
+        // 1. Imposta l'effetto Bagliore
+        ctx.shadowColor = ring.color; 
+        ctx.shadowBlur = 20; // Intensità del bagliore
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
         
+        // 2. Disegna l'anello con il suo colore originale (il "riempimento")
+        ctx.strokeStyle = ring.color;
+        ctx.lineWidth = 8; // Spessore dell'anello/riempimento
+
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.size, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 4. Animazione e Wrap Around (dal basso verso l'alto, più veloce)
+        // 3. Ripristina gli effetti di ombra/bagliore
+        // IMPORTANTE: Azzerare gli shadow prima di disegnare il bordo o altro.
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0; 
+        // =================================================================
+        
+        // 4. Disegna il bordo esterno nero
+        // Imposta il colore a nero
+        ctx.strokeStyle = 'black'; 
+        // Scegli uno spessore per il bordo (ad esempio 2 pixel)
+        ctx.lineWidth = 1; 
+
+        // Disegna l'arco di nuovo, ma con il nuovo stile (disegnando così il bordo)
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.size+4, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 5. Animazione e Wrap Around (dal basso verso l'alto, più veloce)
         ring.y -= ring.speed; // Usa la velocità random definita in initRings
         if (ring.y < 0) {
             ring.y = CANVAS_HEIGHT; // Torna in fondo
@@ -248,7 +366,6 @@ function drawStartScreen() {
         requestAnimationFrame(drawStartScreen);
     }
 }
-
 function drawPlayer() {
     // Draw the player (Ring) as a simple colored square/circle placeholder
     ctx.fillStyle = gameState.selectedRingColor || '#fff';
