@@ -1,18 +1,35 @@
 /*
- * 1. FONT PIXEL ART: Caricamento del font 'Press Start 2P' da Google Fonts.
+ * 0. RESET GLOBALI: ESSENZIALI PER ELIMINARE MARGINI DEL BROWSER
  */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+html, body {
+    margin: 0;
+    padding: 0;
+    /* Impedisce barre di scorrimento su schermi piccoli */
+    overflow: hidden; 
+    /* Assicura che 100% copra lo schermo */
+    width: 100%;
+    height: 100%; 
+    
+    /* Applica il rendering pixelated a tutta la pagina se l'elemento viene scalato */
+    image-rendering: pixelated; 
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* * 1. FONT PIXEL ART: Caricamento del font 'Press Start 2P' da Google Fonts.
+ */
+@import url('https://fonts.com/css2?family=Press+Start+2P&display=swap');
 
 /* Regola generale per applicare il font a tutti i testi nel gioco */
 body,
 #startScreen,
 button {
     font-family: 'Press Start 2P', cursive;
-    /* Applica il font pixel art */
 }
 
 /*
- * 2. MODIFICHE ESSENZIALI PER L'ASPETTO PIXEL ART - Regole Generali per Desktop/Tablet
+ * 2. MODIFICHE ESSENZIALI PER L'ASPETTO PIXEL ART - Regole Generali (DESKTOP/FALLBACK)
+ * Queste dimensioni fisse simulano la risoluzione logica (Punti CSS) di un iPhone (393x852).
  */
 #game-container {
     /* Mantiene il bordo, ma lo rende più 'a blocchi' */
@@ -20,34 +37,33 @@ button {
 
     /* Ombra 'a blocchi' tipica del pixel art per dare profondità */
     box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.8);
-
-    /* Imposta la dimensione standard del contenitore (per desktop) */
+    
+    /* ✅ SIMULAZIONE SMARTPHONE SU DESKTOP: dimensioni fisse 393x852 */
     width: 393px;
-    height: 852px; /* Sarà sovrascritto dalla media query */
+    height: 852px;
+    
+    /* Centra il contenitore orizzontalmente sulla pagina desktop e aggiunge un margine per la visibilità */
+    margin: 20px auto; 
+    
     position: relative;
-
+    
     /* ESSENZIALE PER PIXEL ART: mantiene i pixel nitidi durante lo scaling */
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
-    /* Fallback per Firefox */
     image-rendering: crisp-edges;
 
+    /* Imposta la proporzione corretta del tuo Canvas (393/852) */
+    aspect-ratio: 393 / 852; 
+    
     /* Colore di riserva e URL corretto */
     background-color: #3f3a66;
-
     background-image: url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
-
-    /* Cruciale: Ripeti l'immagine se il background-size è 'auto' o 'contain' */
     background-size: auto; 
     background-repeat: repeat;
-
-    /* Posizione iniziale (verrà manipolata da JS) */
     background-position: 0 0;
 }
 
 #startScreen {
-    /* Il font è già applicato dal body */
-
     position: absolute;
     width: 100%;
     height: 100%;
@@ -80,8 +96,12 @@ button {
     position: absolute;
     top: 0;
     left: 0;
+    
+    /* Il Canvas deve riempire il 100% dello spazio del suo genitore scaled */
+    width: 100%; 
+    height: 100%;
 
-    /* IMPORTANTE: Applicalo anche alla canvas/tela */
+    /* IMPORTANTE: Applicalo anche alla canvas/tela (anche se ereditato dal body, è meglio ripeterlo) */
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -117,80 +137,49 @@ button:hover {
 }
 
 /*
- * ? MEDIA QUERY PER SMARTPHONE (Max 600px di larghezza, in verticale) ?
+ * ✅ MEDIA QUERY PER SMARTPHONE (Orientamento Verticale/Portrait)
  */
-@media (max-width: 393px) and (orientation: portrait) {
+@media (orientation: portrait) {
     
     body {
-        /* Rimuove margini/padding del body che potrebbero causare barre di scorrimento */
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Evita lo scorrimento accidentale */
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: 100vh;
-        background-color: #222; /* Sfondo nero per riempire i lati, se necessario */
+        min-height: 100vh; 
+        background-color: #222; 
     }
 
     #game-container {
- /*
-         * 1. Fissiamo l'altezza al 95% della Viewport Height (vh).
-         * Questa è l'area più grande in verticale.
-         */
-        height: 95vh; 
+        /* Rimuove le dimensioni fisse (desktop) */
+        width: 100%;
+        height: 100%;
+        margin: 0;
         
-        /*
-         * 2. Calcoliamo la larghezza in base all'altezza per mantenere la proporzione 4:3.
-         * (Larghezza = Altezza * 3 / 4)
-         */
-        width: calc(95vh * 3 / 4); 
-        
-        /*
-         * 3. Se la Viewport è molto stretta (es. telefono molto stretto), 
-         * la larghezza calcolata potrebbe essere maggiore della larghezza disponibile (95vw).
-         * Limitiamo la larghezza alla Viewport Width.
-         */
+        /* Limita la larghezza e l'altezza al 95% della viewport per riempire lo schermo */
         max-width: 95vw; 
-        
-        /*
-         * 4. Se max-width viene attivato, ricalcoliamo l'altezza proporzionalmente (4:3) 
-         * in base alla max-width raggiunta.
-         * (Altezza = Larghezza * 4 / 3)
-         */
-        height: calc(95vw * 4 / 3); 
-        
-        /* Assicuriamo che la nuova altezza calcolata non superi l'altezza disponibile in verticale */
         max-height: 95vh; 
-        
-        /* L'uso combinato di max-width, max-height e i calcoli calc() 
-         * garantisce che il contenitore occupi il massimo spazio possibile (4:3) 
-         * senza mai uscire dallo schermo, sia in larghezza che in altezza.
-         */
-        /* Centra se le dimensioni calcolate non occupano tutto lo spazio */
-        margin: auto;
     }
-
-    /* Adatta la dimensione del font per renderlo leggibile ma non troppo grande */
+    
+    /* Adattamenti per il font del menu iniziale su schermi più piccoli */
     #startScreen {
-        font-size: 8px; /* Dimensione ridotta per il testo */
+        font-size: 8px; 
         padding: 10px;
     }
     
     #startScreen h1 {
-        font-size: 14px; /* Dimensione leggermente più grande per il titolo, se presente */
+        font-size: 14px; 
     }
 
+    /* Adattamenti per i bottoni su schermi più piccoli */
     button {
         padding: 8px 16px;
         margin-top: 10px;
-        font-size: 8px; /* Riduci il font del pulsante */
-        border: 2px solid #fff; /* Riduci lo spessore del bordo */
-        box-shadow: 2px 2px 0px 0px #000; /* Riduci l'ombra */
+        font-size: 8px; 
+        border: 2px solid #fff; 
+        box-shadow: 2px 2px 0px 0px #000; 
     }
     
     button:hover {
-        /* Adatta l'effetto hover ridotto */
         box-shadow: 1px 1px 0px 0px #000;
         transform: translate(1px, 1px);
     }
