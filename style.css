@@ -33,7 +33,8 @@ button {
     image-rendering: crisp-edges;
 
     /* Colore di riserva e URL corretto */
-    background-color: #1b1818;
+    background-color: #3f3a66;
+
     background-image: url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
 
     /* Cruciale: Ripeti l'immagine se il background-size è 'auto' o 'contain' */
@@ -52,8 +53,7 @@ button {
     height: 100%;
 
     /* Sfondo semi-trasparente */
-    background-color: rgba(2, 3, 22, 0.7);
-
+    background-color: rgba(49, 56, 191, 0.2);
 
     color: #fff;
     display: flex;
