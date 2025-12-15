@@ -22,8 +22,8 @@ button {
     box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.8);
 
     /* Imposta la dimensione standard del contenitore (per desktop) */
-    width: 800px;
-    height: 600px; /* Sarà sovrascritto dalla media query */
+    width: 320px;
+    height: 720px; /* Sarà sovrascritto dalla media query */
     position: relative;
 
     /* ESSENZIALE PER PIXEL ART: mantiene i pixel nitidi durante lo scaling */
@@ -33,7 +33,7 @@ button {
     image-rendering: crisp-edges;
 
     /* Colore di riserva e URL corretto */
-    background-color: #753737;
+    background-color: #1b1818;
     background-image: url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
 
     /* Cruciale: Ripeti l'immagine se il background-size è 'auto' o 'contain' */
@@ -52,7 +52,8 @@ button {
     height: 100%;
 
     /* Sfondo semi-trasparente */
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(2, 3, 22, 0.7);
+
 
     color: #fff;
     display: flex;
@@ -116,7 +117,7 @@ button:hover {
 }
 
 /*
- * 🌟 MEDIA QUERY PER SMARTPHONE (Max 600px di larghezza, in verticale) 🌟
+ * ? MEDIA QUERY PER SMARTPHONE (Max 600px di larghezza, in verticale) ?
  */
 @media (max-width: 600px) and (orientation: portrait) {
     
