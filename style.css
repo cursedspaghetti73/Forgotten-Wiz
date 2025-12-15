@@ -16,7 +16,7 @@ button {
  */
 #game-container {
     /* Mantiene il bordo, ma lo rende più 'a blocchi' */
-    border: 4px solid #fff;
+    //border: 4px solid #fff;
 
     /* Ombra 'a blocchi' tipica del pixel art per dare profondità */
     box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.8);
@@ -134,19 +134,39 @@ button:hover {
     }
 
     #game-container {
-        /* Larghezza: occupa il 95% della larghezza della viewport per lasciare un piccolo margine */
-        width: 95vw; 
-        
-        /* Altezza: usa una proporzione 4:3 o 16:9 rispetto alla larghezza.
-           Qui uso un 4:3 (600/800 = 0.75). Calcolo: 95vw * 0.75 = 71.25vw */
+ /*
+         * 1. Fissiamo l'altezza al 95% della Viewport Height (vh).
+         * Questa è l'area più grande in verticale.
+         */
         height: 95vh; 
-
-        /* Assicura che il contenitore non superi mai l'altezza della viewport (cruciale per portrait) */
-        max-height: 95vh; 
         
-        /* Se l'altezza massima è limitata, adatta la larghezza proporzionalmente */
+        /*
+         * 2. Calcoliamo la larghezza in base all'altezza per mantenere la proporzione 4:3.
+         * (Larghezza = Altezza * 3 / 4)
+         */
+        width: calc(95vh * 3 / 4); 
+        
+        /*
+         * 3. Se la Viewport è molto stretta (es. telefono molto stretto), 
+         * la larghezza calcolata potrebbe essere maggiore della larghezza disponibile (95vw).
+         * Limitiamo la larghezza alla Viewport Width.
+         */
         max-width: 95vw; 
         
+        /*
+         * 4. Se max-width viene attivato, ricalcoliamo l'altezza proporzionalmente (4:3) 
+         * in base alla max-width raggiunta.
+         * (Altezza = Larghezza * 4 / 3)
+         */
+        height: calc(95vw * 4 / 3); 
+        
+        /* Assicuriamo che la nuova altezza calcolata non superi l'altezza disponibile in verticale */
+        max-height: 95vh; 
+        
+        /* L'uso combinato di max-width, max-height e i calcoli calc() 
+         * garantisce che il contenitore occupi il massimo spazio possibile (4:3) 
+         * senza mai uscire dallo schermo, sia in larghezza che in altezza.
+         */
         /* Centra se le dimensioni calcolate non occupano tutto lo spazio */
         margin: auto;
     }
