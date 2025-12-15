@@ -119,7 +119,7 @@ button:hover {
 /*
  * ? MEDIA QUERY PER SMARTPHONE (Max 600px di larghezza, in verticale) ?
  */
-@media (max-width: 600px) and (orientation: portrait) {
+@media (max-width: 320px) and (orientation: portrait) {
     
     body {
         /* Rimuove margini/padding del body che potrebbero causare barre di scorrimento */
