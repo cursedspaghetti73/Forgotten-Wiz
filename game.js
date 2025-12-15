@@ -1,6 +1,6 @@
 // Write JavaScript here// --- CONFIGURATION ---
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 600;
+const CANVAS_WIDTH = 320;
+const CANVAS_HEIGHT = 720;
 const GAME_TIME = 60; // seconds until boss
 const RING_COLORS = {
     'WHITE': '#fff',
@@ -33,7 +33,7 @@ const FIRE_RATE_LEVELS = {
 
 let gameState = {
 
-    // 🌟 NUOVO: Stato per il Touch Controllo 🌟
+    // ? NUOVO: Stato per il Touch Controllo ?
     touchIdentifier: null, // Traccia un ID di tocco specifico (per multitouch)
     touchX: null,
     touchY: null,
@@ -442,7 +442,7 @@ function drawUI() {
 // --- UPDATE FUNCTIONS ---
 
 function updatePlayer() {
-    // 🌟 NUOVO: Logica di Movimento Basata sul Touch 🌟
+    // ? NUOVO: Logica di Movimento Basata sul Touch ?
     if (gameState.touchIdentifier !== null) {
         // Se c'è un tocco attivo, muovi il giocatore verso la posizione del tocco.
         // Puoi anche muoverlo direttamente alla posizione del tocco.
@@ -588,7 +588,7 @@ window.addEventListener('keyup', (e) => {
 
 // ... (existing event listeners)
 
-// 🌟 NUOVO: Touch Input per Dispositivi Mobili 🌟
+// ? NUOVO: Touch Input per Dispositivi Mobili ?
 
 // Funzione di utilità per ottenere le coordinate relative del tocco
 function getTouchPos(touchEvent) {
