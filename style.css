@@ -22,8 +22,8 @@ button {
     box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.8);
 
     /* Imposta la dimensione standard del contenitore (per desktop) */
-    width: 320px;
-    height: 720px; /* Sarà sovrascritto dalla media query */
+    width: 393px;
+    height: 852px; /* Sarà sovrascritto dalla media query */
     position: relative;
 
     /* ESSENZIALE PER PIXEL ART: mantiene i pixel nitidi durante lo scaling */
@@ -119,7 +119,7 @@ button:hover {
 /*
  * ? MEDIA QUERY PER SMARTPHONE (Max 600px di larghezza, in verticale) ?
  */
-@media (max-width: 320px) and (orientation: portrait) {
+@media (max-width: 393px) and (orientation: portrait) {
     
     body {
         /* Rimuove margini/padding del body che potrebbero causare barre di scorrimento */
@@ -145,7 +145,7 @@ button:hover {
         max-height: 95vh; 
         
         /* Se l'altezza massima è limitata, adatta la larghezza proporzionalmente */
-        max-width: 95vw; 
+        max-width: 95vh; 
         
         /* Centra se le dimensioni calcolate non occupano tutto lo spazio */
         margin: auto;
