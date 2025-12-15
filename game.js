@@ -13,6 +13,10 @@ const RING_COLORS = {
 };
 
 // --- GLOBAL GAME STATE ---
+let backgroundPositionY = 0; // Traccia la posizione Y dello sfondo (inizia da 0)
+const SCROLL_SPEED = 1; // Velocità di scorrimento in pixel per frame
+const gameContainer = document.getElementById('game-container');
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startScreen = document.getElementById('startScreen');
@@ -28,6 +32,13 @@ const FIRE_RATE_LEVELS = {
 
 
 let gameState = {
+
+    // 🌟 NUOVO: Stato per il Touch Controllo 🌟
+    touchIdentifier: null, // Traccia un ID di tocco specifico (per multitouch)
+    touchX: null,
+    touchY: null,
+    // ... (stato esistente)
+
     // 'start', 'playing', 'powerup', 'boss'
     currentScreen: 'start',
     selectedRingColor: null,
@@ -218,10 +229,10 @@ function fireSpecialAttack() {
 // --- RENDERING FUNCTIONS (PIXEL ART PLACEHOLDERS) ---
 
 function drawStartScreen() {
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    //ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     // Disegna lo sfondo blu scuro
-    ctx.fillStyle = '#000033';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    //ctx.fillStyle = '#000033';
+   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     // Disegna gli anelli e le scie
     gameState.rings.forEach(ring => {
@@ -256,7 +267,7 @@ function drawStartScreen() {
         ctx.globalAlpha = 1.0;
 
         // =================================================================
-        // 🌟 EFFETTO BAGLIORE (GLOW) 🌟
+        // ? EFFETTO BAGLIORE (GLOW) ?
         // 1. Imposta l'effetto Bagliore
         ctx.shadowColor = ring.color;
         ctx.shadowBlur = 20; // Intensità del bagliore
@@ -343,7 +354,7 @@ function drawPlayer() {
     // *** 3. EFFETTO BAGLIORE (GLOW) ***
     // Imposta il bagliore per l'anello del giocatore
     ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 15; // Intensità del bagliore
+    ctx.shadowBlur = 20; // Intensità del bagliore
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
@@ -431,18 +442,39 @@ function drawUI() {
 // --- UPDATE FUNCTIONS ---
 
 function updatePlayer() {
-    // Handle movement based on pressed keys
-    if (gameState.keys['ArrowLeft'] && gameState.playerX > 10) {
-        gameState.playerX -= gameState.playerSpeed;
-    }
-    if (gameState.keys['ArrowRight'] && gameState.playerX < CANVAS_WIDTH - 10) {
-        gameState.playerX += gameState.playerSpeed;
-    }
-    if (gameState.keys['ArrowUp'] && gameState.playerY > CANVAS_HEIGHT / 2) {
-        gameState.playerY -= gameState.playerSpeed;
-    }
-    if (gameState.keys['ArrowDown'] && gameState.playerY < CANVAS_HEIGHT - 10) {
-        gameState.playerY += gameState.playerSpeed;
+    // 🌟 NUOVO: Logica di Movimento Basata sul Touch 🌟
+    if (gameState.touchIdentifier !== null) {
+        // Se c'è un tocco attivo, muovi il giocatore verso la posizione del tocco.
+        // Puoi anche muoverlo direttamente alla posizione del tocco.
+        
+        // Movimento Diretto alla Posizione del Tocco (più immediato per i giochi shmup)
+        // Aggiorna la posizione X e Y, limitandola ai bordi della Canvas.
+        if (gameState.touchX !== null && gameState.touchY !== null) {
+            gameState.playerX = Math.max(
+                10, 
+                Math.min(CANVAS_WIDTH - 10, gameState.touchX)
+            );
+            // Si limita il movimento Y solo nella metà inferiore dello schermo
+            gameState.playerY = Math.max(
+                CANVAS_HEIGHT / 2, 
+                Math.min(CANVAS_HEIGHT - 10, gameState.touchY)
+            );
+        }
+        
+    } else {
+        // Logica di Movimento Basata su Keyboard (fall-back per desktop)
+        if (gameState.keys['ArrowLeft'] && gameState.playerX > 10) {
+            gameState.playerX -= gameState.playerSpeed;
+        }
+        if (gameState.keys['ArrowRight'] && gameState.playerX < CANVAS_WIDTH - 10) {
+            gameState.playerX += gameState.playerSpeed;
+        }
+        if (gameState.keys['ArrowUp'] && gameState.playerY > CANVAS_HEIGHT / 2) {
+            gameState.playerY -= gameState.playerSpeed;
+        }
+        if (gameState.keys['ArrowDown'] && gameState.playerY < CANVAS_HEIGHT - 10) {
+            gameState.playerY += gameState.playerSpeed;
+        }
     }
 }
 
@@ -459,20 +491,36 @@ function updateBullets() {
 
 // --- MAIN GAME LOOP ---
 
+// VARIABILI (Assumi che siano già definite all'inizio del file)
+// let backgroundPositionY = 0; 
+// const SCROLL_SPEED = 1; 
+// const gameContainer = document.getElementById('game-container');
+
 function gameLoop() {
     if (gameState.currentScreen === 'playing') {
         // 1. CLEAR CANVAS
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        ctx.fillStyle = '#000033';
+        ctx.fillStyle = 'transparent'; 
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-        // 2. UPDATE GAME STATE
+
+        // 2. UPDATE GAME STATE (e Sfondo CSS)
+        
+        // --- LOGICA INFINITE SCROLLING VERTICALE (VERSO IL BASSO) ---
+        // INCREMENTA la posizione Y per spostare lo sfondo in GIÙ
+        backgroundPositionY += SCROLL_SPEED; 
+        
+        // Applica la nuova posizione: background-position: X Y;
+        // La X resta 0, la Y è dinamica.
+        gameContainer.style.backgroundPosition = `0px ${backgroundPositionY}px`;
+        // -----------------------------------------------------------
+
         updatePlayer();
         updateBullets();
 
         // 3. DRAW GAME OBJECTS
         drawPlayer();
-        drawEnemies(); // Draw enemies and boss if active
+        drawEnemies(); 
         drawBullets();
         drawUI();
 
@@ -535,6 +583,91 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
     gameState.keys[e.key] = false;
 });
+
+// --- EVENT LISTENERS (AGGIUNTA CONTROLLO TOUCH) ---
+
+// ... (existing event listeners)
+
+// 🌟 NUOVO: Touch Input per Dispositivi Mobili 🌟
+
+// Funzione di utilità per ottenere le coordinate relative del tocco
+function getTouchPos(touchEvent) {
+    // Assicurati che l'evento e i suoi target siano validi
+    if (!touchEvent || !touchEvent.target) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = touchEvent.touches[0];
+    
+    // Calcola la posizione del tocco relativa al canvas, scalata correttamente
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+    
+    return { x: x, y: y };
+}
+
+// 1. TOUCH START (Primo tocco)
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Impedisce lo zoom/scroll di default
+    
+    if (gameState.currentScreen === 'playing' && e.touches.length > 0) {
+        const pos = getTouchPos(e);
+        
+        // Usa il primo tocco per il movimento
+        gameState.touchIdentifier = e.touches[0].identifier;
+        gameState.touchX = pos.x;
+        gameState.touchY = pos.y;
+    }
+}, { passive: false });
+
+
+// 2. TOUCH MOVE (Il dito si muove)
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Impedisce lo scroll durante il movimento
+    
+    if (gameState.currentScreen === 'playing' && gameState.touchIdentifier !== null) {
+        // Cerca il tocco che stiamo tracciando
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === gameState.touchIdentifier);
+
+        if (touch) {
+            const pos = getTouchPos({ touches: [touch], target: canvas });
+            gameState.touchX = pos.x;
+            gameState.touchY = pos.y;
+        }
+    }
+}, { passive: false });
+
+
+// 3. TOUCH END (Il dito viene sollevato)
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    
+    // Controlla se il tocco tracciato è terminato
+    const touchEnded = Array.from(e.changedTouches).some(t => t.identifier === gameState.touchIdentifier);
+
+    if (touchEnded) {
+        gameState.touchIdentifier = null;
+        gameState.touchX = null;
+        gameState.touchY = null;
+    }
+    
+    // Opzionale: se il tocco viene usato solo per il movimento, 
+    // potresti usare un secondo tocco (multitouch) per l'attacco speciale.
+    // Esempio: fireSpecialAttack(); se e.changedTouches.length era 2 (se non c'era un altro touch attivo)
+    
+}, { passive: false });
+
+// 4. TOUCH CANCEL (Caso di interruzione come una chiamata in arrivo)
+canvas.addEventListener('touchcancel', (e) => {
+    gameState.touchIdentifier = null;
+    gameState.touchX = null;
+    gameState.touchY = null;
+});
+
+
+
 
 // --- START DRAWING THE START SCREEN ANIMATION ---
 drawStartScreen();
