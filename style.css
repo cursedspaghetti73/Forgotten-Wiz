@@ -139,13 +139,13 @@ button:hover {
         
         /* Altezza: usa una proporzione 4:3 o 16:9 rispetto alla larghezza.
            Qui uso un 4:3 (600/800 = 0.75). Calcolo: 95vw * 0.75 = 71.25vw */
-        height: 71.25vw; 
+        height: 95vw; 
 
         /* Assicura che il contenitore non superi mai l'altezza della viewport (cruciale per portrait) */
         max-height: 95vh; 
         
         /* Se l'altezza massima è limitata, adatta la larghezza proporzionalmente */
-        max-width: calc(95vh / 0.75); 
+        max-width: 95vw; 
         
         /* Centra se le dimensioni calcolate non occupano tutto lo spazio */
         margin: auto;
