@@ -119,7 +119,7 @@ button:hover {
 /*
  * ? MEDIA QUERY PER SMARTPHONE (Max 600px di larghezza, in verticale) ?
  */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 393px) and (orientation: portrait) {
     
     body {
         /* Rimuove margini/padding del body che potrebbero causare barre di scorrimento */
@@ -139,13 +139,13 @@ button:hover {
         
         /* Altezza: usa una proporzione 4:3 o 16:9 rispetto alla larghezza.
            Qui uso un 4:3 (600/800 = 0.75). Calcolo: 95vw * 0.75 = 71.25vw */
-        height: 95vw; 
+        height: 95vh; 
 
         /* Assicura che il contenitore non superi mai l'altezza della viewport (cruciale per portrait) */
         max-height: 95vh; 
         
         /* Se l'altezza massima è limitata, adatta la larghezza proporzionalmente */
-        max-width: 95vh; 
+        max-width: 95vw; 
         
         /* Centra se le dimensioni calcolate non occupano tutto lo spazio */
         margin: auto;
