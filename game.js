@@ -1,6 +1,6 @@
 // Write JavaScript here// --- CONFIGURATION ---
-const CANVAS_WIDTH = 320;
-const CANVAS_HEIGHT = 720;
+const CANVAS_WIDTH = 393;
+const CANVAS_HEIGHT = 852;
 const GAME_TIME = 60; // seconds until boss
 const RING_COLORS = {
     'WHITE': '#fff',
@@ -272,7 +272,7 @@ function drawStartScreen() {
         ctx.shadowColor = ring.color;
         ctx.shadowBlur = 20; // Intensità del bagliore
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
+        ctx.shadowOffsetY = 10;
 
         // 2. Disegna l'anello con il suo colore originale (il "riempimento")
         ctx.strokeStyle = ring.color;
