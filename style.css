@@ -1,186 +1,98 @@
-/*
- * 0. RESET GLOBALI: ESSENZIALI PER ELIMINARE MARGINI DEL BROWSER
- */
+/* 0. RESET GLOBALI */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 html, body {
     margin: 0;
     padding: 0;
-    /* Impedisce barre di scorrimento su schermi piccoli */
     overflow: hidden; 
-    /* Assicura che 100% copra lo schermo */
     width: 100%;
     height: 100%; 
-    
-    /* Applica il rendering pixelated a tutta la pagina se l'elemento viene scalato */
-    image-rendering: pixelated; 
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-}
-
-/* * 1. FONT PIXEL ART: Caricamento del font 'Press Start 2P' da Google Fonts.
- */
-@import url('https://fonts.com/css2?family=Press+Start+2P&display=swap');
-
-/* Regola generale per applicare il font a tutti i testi nel gioco */
-body,
-#startScreen,
-button {
+    background-color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Font principale */
     font-family: 'Press Start 2P', cursive;
 }
 
-/*
- * 2. MODIFICHE ESSENZIALI PER L'ASPETTO PIXEL ART - Regole Generali (DESKTOP/FALLBACK)
- * Queste dimensioni fisse simulano la risoluzione logica (Punti CSS) di un iPhone (393x852).
- */
+/* 1. CONTENITORE GIOCO (SIMULAZIONE SMARTPHONE) */
 #game-container {
-    /* Mantiene il bordo, ma lo rende più 'a blocchi' */
-    //border: 4px solid #fff;
-
-    /* Ombra 'a blocchi' tipica del pixel art per dare profondità */
-    box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.8);
-    
-    /* ✅ SIMULAZIONE SMARTPHONE SU DESKTOP: dimensioni fisse 393x852 */
+    position: relative;
     width: 393px;
     height: 852px;
-    
-    /* Centra il contenitore orizzontalmente sulla pagina desktop e aggiunge un margine per la visibilità */
-    margin: 20px auto; 
-    
-    position: relative;
-    
-    /* ESSENZIALE PER PIXEL ART: mantiene i pixel nitidi durante lo scaling */
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-
-    /* Imposta la proporzione corretta del tuo Canvas (393/852) */
-    aspect-ratio: 393 / 852; 
-    
-    /* Colore di riserva e URL corretto */
     background-color: #3f3a66;
     background-image: url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
-    background-size: auto; 
+    background-size: 64px; /* Ridimensiona la texture di sfondo per farla sembrare pixel art */
     background-repeat: repeat;
-    background-position: 0 0;
+    
+    /* Mantiene i bordi dei pixel nitidi quando scalati */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    
+    border: 6px solid #000;
+    box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
 }
 
+/* 2. IL CANVAS */
+#gameCanvas {
+    display: block;
+    width: 100%; /* Si espande per riempire il container */
+    height: 100%;
+    image-rendering: pixelated; /* Fondamentale qui */
+}
+
+/* 3. SCHERMATA INIZIALE */
 #startScreen {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-
-    /* Sfondo semi-trasparente */
-    background-color: rgba(49, 56, 191, 0.2);
-
-    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    color: white;
     text-align: center;
-
-    /* Dimensione del font standard */
-    font-size: 16px; 
-
-    padding: 20px;
-    box-sizing: border-box;
-    border: none;
     z-index: 10;
-
-    /* Ombra del testo 'a blocchi' per migliorare la leggibilità su sfondo scuro */
-    text-shadow: 2px 2px 0px #000;
 }
 
-#gameCanvas {
-    background-color: transparent;
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    
-    /* Il Canvas deve riempire il 100% dello spazio del suo genitore scaled */
-    width: 100%; 
-    height: 100%;
-
-    /* IMPORTANTE: Applicalo anche alla canvas/tela (anche se ereditato dal body, è meglio ripeterlo) */
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
+h1 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    text-shadow: 4px 4px 0px #000;
 }
 
-/* * 3. STILE PIXEL ART per i BOTTONI
- */
+p {
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+/* 4. BOTTONE PIXEL ART */
 button {
-    background-color: #333;
-    color: #fff;
-    padding: 10px 20px;
-    margin-top: 15px;
-    border: 3px solid #fff;
-    /* Bordo netto e spesso */
+    font-family: 'Press Start 2P', cursive;
+    background-color: #1b0190;
+    color: white;
+    border: 4px solid #fff;
+    padding: 15px;
     cursor: pointer;
-
-    /* Ombra netta per dare l'effetto 3D/blocco */
-    box-shadow: 3px 3px 0px 0px #000;
-
-    /* Rimuovi l'arrotondamento predefinito */
-    border-radius: 0;
-
-    /* Aggiungi un effetto hover per l'interazione */
-    transition: all 0.1s ease-in-out;
-    font-size: 10px; /* Riduci la dimensione di base del font per i pulsanti */
+    box-shadow: 4px 4px 0px #000;
+    font-size: 10px;
+    transition: transform 0.1s;
 }
 
-button:hover {
-    background-color: #555;
-    /* Sposta l'ombra per simulare la pressione */
-    box-shadow: 1px 1px 0px 0px #000;
-    transform: translate(2px, 2px);
+button:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px #000;
 }
 
-/*
- * ✅ MEDIA QUERY PER SMARTPHONE (Orientamento Verticale/Portrait)
- */
-@media (orientation: portrait) {
-    
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh; 
-        background-color: #222; 
-    }
-
+/* 5. RESPONSIVE PER MOBILE */
+@media (max-width: 450px) {
     #game-container {
-        /* Rimuove le dimensioni fisse (desktop) */
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        
-        /* Limita la larghezza e l'altezza al 95% della viewport per riempire lo schermo */
-        max-width: 95vw; 
-        max-height: 95vh; 
-    }
-    
-    /* Adattamenti per il font del menu iniziale su schermi più piccoli */
-    #startScreen {
-        font-size: 8px; 
-        padding: 10px;
-    }
-    
-    #startScreen h1 {
-        font-size: 14px; 
-    }
-
-    /* Adattamenti per i bottoni su schermi più piccoli */
-    button {
-        padding: 8px 16px;
-        margin-top: 10px;
-        font-size: 8px; 
-        border: 2px solid #fff; 
-        box-shadow: 2px 2px 0px 0px #000; 
-    }
-    
-    button:hover {
-        box-shadow: 1px 1px 0px 0px #000;
-        transform: translate(1px, 1px);
+        width: 100vw;
+        height: 100vh;
+        border: none;
     }
 }
