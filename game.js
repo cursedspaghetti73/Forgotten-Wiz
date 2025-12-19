@@ -61,7 +61,6 @@ let gameState = {
     specialRay: { active: false }, // Initialize as inactive
     isCharging: false,
 
-
     // Enemies and Boss
     enemies: [],
     gameTimer: GAME_TIME,
@@ -229,7 +228,7 @@ function fireSpecialAttack() {
             x: gameState.playerX, // Initial center
             maxWidth: 250,        // How wide the beam starts
             currentWidth: 200,    // This will decrease over time
-            duration: 1.0,        // How long the beam stays (seconds)
+            duration: 0.8,        // How long the beam stays (seconds)
             startTime: Date.now() / 1000,
             active: true
         };
@@ -646,7 +645,7 @@ function gameLoop() {
         drawChargeEffect(ctx); // Visual feedback that charging is happening
     }
 
-        drawEnemies(); 
+        //drawEnemies(); 
         drawBullets();
         drawUI();
 
