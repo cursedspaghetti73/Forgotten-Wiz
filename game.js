@@ -43,7 +43,7 @@ let gameState = {
     currentScreen: 'start',
     selectedRingColor: null,
     playerX: CANVAS_WIDTH / 2,
-    playerY: CANVAS_HEIGHT - 50,
+    playerY: CANVAS_HEIGHT - 300,
     playerSpeed: 5,
     keys: {}, // Holds pressed keys
 
