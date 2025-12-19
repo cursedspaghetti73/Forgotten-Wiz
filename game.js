@@ -5,7 +5,7 @@ const GAME_TIME = 60; // seconds until boss
 const RING_COLORS = {
     'WHITE': '#fff',
     'BROWN': '#5d4037', // Marrone scuro
-    'RED': '#ff0000',
+    'RED': '#af0000',
     'BLUE': '#0000ff',
     'GREEN': '#388e3c', // Verde meno brillante
     'YELLOW': '#ffeb3b', // Giallo meno intenso (es. 'Yellow' 400/500)
@@ -49,7 +49,7 @@ let gameState = {
 
     // Firing
     fireRateLevel: 1, // Nuovo: Livello 1 a 3 (Velocità di sparo)
-    bulletLevel: 1,   // Nuovo: Livello 1 a 3 (Numero di missili: 1, 3, o 5)
+    bulletLevel: 3,   // Nuovo: Livello 1 a 3 (Numero di missili: 1, 3, o 5)
     fireRate: 200,    // Base rate (inizializzato, ma userà FIRE_RATE_LEVELS)
     lastShotTime: 0,
     bullets: [],
@@ -58,6 +58,9 @@ let gameState = {
     specialCooldown: 10, // seconds
     specialLastUsed: 0,
     specialOnCooldown: false,
+    specialRay: { active: false }, // Initialize as inactive
+    isCharging: false,
+
 
     // Enemies and Boss
     enemies: [],
@@ -167,34 +170,38 @@ function spawnEnemies(count) {
 }
 
 function autoFire() {
-    if (gameState.currentScreen === 'playing') {
+    if (gameState.currentScreen === 'playing' && gameState.isCharging === false) {
         const now = Date.now();
         
-        // Determina il fire rate attuale in base al livello
         const currentFireRate = FIRE_RATE_LEVELS[gameState.fireRateLevel] || FIRE_RATE_LEVELS[1];
 
-
-        // Check se è passato abbastanza tempo dall'ultimo sparo
         if (now - gameState.lastShotTime >= currentFireRate) {
             
-            // --- Logica per i missili multipli ---
             const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
-            const spacing = 15; // Spaziatura orizzontale tra i missili
+            const spacing = 18; // Leggermente aumentata per non sovrapporli troppo
+            const verticalStagger = 12; // Quanto ogni missile "rientra" rispetto a quello centrale
             
-            // Offset centrale per distribuire i missili attorno al centro
             const totalWidth = (missileCount - 1) * spacing;
             let startX = gameState.playerX - (totalWidth / 2);
 
+            // Troviamo l'indice del missile centrale
+            const centerIndex = Math.floor(missileCount / 2);
+
             for (let i = 0; i < missileCount; i++) {
                 const missileX = startX + i * spacing;
+                
+                // Calcoliamo la distanza dall'indice centrale (es: 0, 1, 0 per 3 missili)
+                const distFromCenter = Math.abs(i - centerIndex);
+                
+                // Più è lontano dal centro, più il valore Y aumenta (quindi scende nel canvas)
+                const yOffset = distFromCenter * verticalStagger;
 
-                // Aggiungi un missile (ora un missile a forma di ellisse)
                 gameState.bullets.push({
                     x: missileX,
-                    y: gameState.playerY - 20,
+                    y: (gameState.playerY - 20) + yOffset, // Aggiungiamo l'offset
                     speed: 10,
-                    size: 12, // Dimensione base
-                    color: gameState.selectedRingColor, // Colore del giocatore
+                    size: 12,
+                    color: gameState.selectedRingColor,
                     isSpecial: false
                 });
             }
@@ -205,26 +212,109 @@ function autoFire() {
 }
 
 function fireSpecialAttack() {
-    const now = Date.now() / 1000; // Convert to seconds
-    if (!gameState.specialOnCooldown) {
-        // Add a special bullet (placeholder: large, powerful)
-        gameState.bullets.push({
-            x: gameState.playerX,
-            y: gameState.playerY - 30,
-            speed: 7,
-            size: 15,
-            isSpecial: true
-        });
+    const now = Date.now() / 1000;
 
-        gameState.specialLastUsed = now;
+    // Don't fire if on cooldown OR already charging
+    if (gameState.specialOnCooldown || gameState.isCharging) return;
+
+    // Phase 1: Start Charging
+    gameState.isCharging = true;
+
+    // Wait for the charge time (e.g., 1 second)
+    setTimeout(() => {
+        gameState.isCharging = false;
+        
+        // Phase 2: Create the Ray
+        gameState.specialRay = {
+            x: gameState.playerX, // Initial center
+            maxWidth: 250,        // How wide the beam starts
+            currentWidth: 200,    // This will decrease over time
+            duration: 1.0,        // How long the beam stays (seconds)
+            startTime: Date.now() / 1000,
+            active: true
+        };
+
+        // Set Cooldown
         gameState.specialOnCooldown = true;
+        gameState.specialLastUsed = now;
 
-        // Set up the cooldown timer
         setTimeout(() => {
             gameState.specialOnCooldown = false;
         }, gameState.specialCooldown * 1000);
+
+    }, 1000); // 1 second charge time
+}
+
+function updateSpecialRay() {
+    if (!gameState.specialRay || !gameState.specialRay.active) return;
+
+    const ray = gameState.specialRay;
+    const now = Date.now() / 1000;
+    const elapsed = now - ray.startTime;
+
+    if (elapsed < ray.duration) {
+        // Calculate percentage of life remaining (1.0 down to 0.0)
+        const lifeLeft = 1 - (elapsed / ray.duration);
+        
+        // Shrink width based on time remaining
+        ray.currentWidth = ray.maxWidth * lifeLeft;
+        
+        // Keep the ray attached to the player's current X position
+        ray.x = gameState.playerX; 
+    } else {
+        ray.active = false; // Turn off once time is up
     }
 }
+
+function drawSpecialRay(ctx) {
+    const ray = gameState.specialRay;
+    if (!ray || !ray.active) return;
+
+    const drawX = ray.x - (ray.currentWidth / 2);
+    const rayHeight = gameState.playerY; // Extends from player to top of screen
+
+    // 1. Create the Inferno Gradient (Left to Right)
+    // This makes the edges dark red and the center bright yellow/white
+    let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
+    
+    gradient.addColorStop(0, 'rgba(139, 0, 0, 0)');    // Transparent Dark Red edge
+    gradient.addColorStop(0.2, 'rgba(255, 0, 0, 0.8)'); // Solid Red
+    gradient.addColorStop(0.5, 'rgba(255, 255, 0, 0.9)'); // Bright Yellow center
+    gradient.addColorStop(0.8, 'rgba(255, 0, 0, 0.8)'); // Solid Red
+    gradient.addColorStop(1, 'rgba(139, 0, 0, 0)');    // Transparent Dark Red edge
+
+    // 2. Add a Glow Effect (Shadows)
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "red";
+
+    // 3. Draw the Main Beam
+    ctx.fillStyle = gradient;
+    ctx.fillRect(drawX, 0, ray.currentWidth, rayHeight);
+
+    // 4. Draw the "White Hot" Lava Core
+    // We add a tiny bit of random wobble to make it look like flowing fire
+    const coreWobble = (Math.random() - 0.5) * 4;
+    const coreWidth = ray.currentWidth * 0.2; // Core is 20% of the beam width
+
+    ctx.fillStyle = "white";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "yellow";
+    ctx.fillRect(ray.x - (coreWidth / 2) + coreWobble, 0, coreWidth, rayHeight);
+
+    // Reset shadow so it doesn't affect other game drawings
+    ctx.shadowBlur = 0;
+}
+ 
+function drawChargeEffect(ctx) {
+    ctx.beginPath();
+    ctx.arc(gameState.playerX, gameState.playerY, 30, 0, Math.PI * 2);
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // Hint: Use a pulsing alpha or a rotating line here for extra flair
+}
+
+
 
 // --- RENDERING FUNCTIONS (PIXEL ART PLACEHOLDERS) ---
 
@@ -280,6 +370,7 @@ function drawStartScreen() {
 
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.size, 0, Math.PI * 2);
+        //ctx.fill()
         ctx.stroke();
 
         // 3. Ripristina gli effetti di ombra/bagliore
@@ -316,7 +407,7 @@ function drawStartScreen() {
 }
 function drawPlayer() {
     const playerSize = 12; // Raggio dell'anello del giocatore
-    const maxTrailLength = 15; // Lunghezza della scia per il giocatore
+    const maxTrailLength = 25; // Lunghezza della scia per il giocatore
     const ringColor = gameState.selectedRingColor || '#fff';
 
     // *** 1. AGGIORNA E MANTIENI LA SCIA (TRAIL) ***
@@ -340,11 +431,14 @@ function drawPlayer() {
         const trailSize = playerSize * (1 + alpha * 0.5); // Leggermente più grande verso la testa
         
         ctx.strokeStyle = ringColor;
-        ctx.globalAlpha = alpha * 0.7; // Scia più visibile
-        ctx.lineWidth = 1;
+        ctx.fillStyle = ringColor;
+        ctx.globalAlpha = alpha * 0.2; // Scia più visibile
+        ctx.lineWidth = 2;
 
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, trailSize, 0, Math.PI * 2); // Disegna la scia leggermente sotto il centro del player
+        ctx.arc(pos.x, pos.y, trailSize, 0, Math.PI * 2); 
+        // Disegna la scia leggermente sotto il centro del player
+        //ctx.fill();
         ctx.stroke();
     });
 
@@ -354,7 +448,7 @@ function drawPlayer() {
     // *** 3. EFFETTO BAGLIORE (GLOW) ***
     // Imposta il bagliore per l'anello del giocatore
     ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 20; // Intensità del bagliore
+    ctx.shadowBlur = 22; // Intensità del bagliore
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
@@ -362,7 +456,7 @@ function drawPlayer() {
     
     // Disegna l'anello con il suo colore originale (il "riempimento")
     ctx.strokeStyle = ringColor;
-    ctx.lineWidth = 1; // Spessore dell'anello
+    ctx.lineWidth = 8; // Spessore dell'anello
 
     ctx.beginPath();
     ctx.arc(gameState.playerX, gameState.playerY, playerSize, 0, Math.PI * 2);
@@ -374,7 +468,7 @@ function drawPlayer() {
 
     // *** 5. BORDO ESTERNO NERO (per visibilità) ***
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.5;
     ctx.beginPath();
     ctx.arc(gameState.playerX, gameState.playerY, playerSize + 8, 0, Math.PI * 2);
     ctx.stroke();
@@ -394,32 +488,53 @@ function drawEnemies() {
 
 function drawBullets() {
     gameState.bullets.forEach(bullet => {
-        // Usa il colore del missile se è definito (dal giocatore/autoFire)
-        ctx.fillStyle = bullet.isSpecial ? '#ffd700' : (bullet.color || '#fff'); 
+        ctx.save(); // Salviamo lo stato per non influenzare altri disegni
 
-        ctx.beginPath();
         if (bullet.isSpecial) {
-            // Special bullet (quadrato o rettangolo)
+            ctx.fillStyle = '#ffd700';
             ctx.fillRect(bullet.x - bullet.size / 2, bullet.y - bullet.size / 2, bullet.size, bullet.size);
         } else {
-            // Missile Normale: Ellisse schiacciata
-            const missileWidth = bullet.size; // 8
-            const missileHeight = bullet.size * 3; // 16 (forma allungata)
+            const width = bullet.size; // Es. 8
+            const height = bullet.size * 4; // Più allungata per l'effetto scia
 
-            // Usa 'ellipse' per una forma più fluida rispetto a un percorso manuale
-            // L'origine (x, y) è il centro dell'ellisse.
-            ctx.ellipse(
-                bullet.x, // Centro X
-                bullet.y + missileHeight / 4, // Spostato leggermente in basso per far sembrare che la punta sia 'bullet.y'
-                missileWidth / 2, // Raggio X
-                missileHeight / 1.7, // Raggio Y
-                0, // Rotazione
-                0, // Angolo di inizio
-                Math.PI * 2 // Angolo di fine
+            // 1. Creiamo un gradiente radiale per l'effetto "nucleo caldo"
+            // Il gradiente va dal centro verso l'esterno
+            let gradient = ctx.createRadialGradient(
+                bullet.x, bullet.y, 0,           // Centro (punto caldissimo)
+                bullet.x, bullet.y, height / 2  // Raggio esterno
             );
+            
+            gradient.addColorStop(0, '#fff');    // Bianco al centro
+            gradient.addColorStop(0.2, '#ff0');  // Giallo
+            gradient.addColorStop(0.5, 'red');  // Arancione
+            gradient.addColorStop(1, 'transparent'); // Dissolvenza verso la coda
+
+            // 2. Aggiungiamo un bagliore (Glow)
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#f40';
+
+            // 3. Disegniamo la forma a goccia/palla allungata
+            ctx.beginPath();
+            ctx.fillStyle = gradient;
+            
+            // Disegniamo un'ellisse ma la deformiamo leggermente verso l'alto (scia)
+            ctx.ellipse(
+                bullet.x, 
+                bullet.y, 
+                width / 2, 
+                height / 2, 
+                0, 0, Math.PI * 2
+            );
+            
             ctx.fill();
 
+            // Opzionale: un piccolo bordo scuro molto sottile se vuoi mantenere definizione
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
         }
+
+        ctx.restore(); // Ripristiniamo lo stato originale (rimuove ombre e stili)
     });
 }
 
@@ -520,6 +635,17 @@ function gameLoop() {
 
         // 3. DRAW GAME OBJECTS
         drawPlayer();
+        // 2. Update logic
+        updateSpecialRay(); 
+        // ... update other bullets/enemies ...
+
+        // 3. Draw logic
+        drawSpecialRay(ctx); // Call the draw function here!
+    
+        if (gameState.isCharging) {
+        drawChargeEffect(ctx); // Visual feedback that charging is happening
+    }
+
         drawEnemies(); 
         drawBullets();
         drawUI();
